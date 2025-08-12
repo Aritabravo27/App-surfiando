@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "default": "sufiando",
+    "sufiando": "sufiando",
+    "surfiando": "sufiando"
+  },
+  "targets": {},
+  "etags": {}
+}

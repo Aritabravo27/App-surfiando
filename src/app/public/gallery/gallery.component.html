@@ -1,0 +1,8 @@
+<div class="gallery-grid">
+    <div *ngFor="let img of images"
+         class="gallery-item"
+         [ngStyle]="img.style"
+         [style.background-image]="'url(' + img.url + ')'">
+    </div>
+  </div>
+  

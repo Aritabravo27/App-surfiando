@@ -1,0 +1,62 @@
+@property --a {
+    syntax: '<angle>';
+    inherits: true;
+    initial-value: 0deg;
+}
+
+@property --p {
+    syntax: '<percentage>';
+    inherits: true;
+    initial-value: 0%;
+}
+
+@property --c1 {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: var(--mud);
+}
+
+@property --c2 {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: var(--green);
+}
+
+@keyframes m {
+
+    0%,
+    15% {
+        --a: 135deg;
+        --p: 20%;
+        --c1: #3B8183;
+        --c2: #FAD089;
+        background-position: 0 0, var(--s) var(--s);
+    }
+
+    45%,
+    50% {
+        --a: 90deg;
+        --p: 25%;
+        --c1: #3B8183;
+        --c2: #FAD089;
+        background-position: 0 0, var(--s) var(--s);
+    }
+
+    50.01%,
+    55% {
+        --a: 90deg;
+        --p: 25%;
+        --c2: #3B8183;
+        --c1: #FAD089;
+        background-position: var(--s) 0, 0 var(--s);
+    }
+
+    85%,
+    100% {
+        --a: 135deg;
+        --p: 20%;
+        --c2: #3B8183;
+        --c1: #FAD089;
+        background-position: var(--s) 0, 0 var(--s);
+    }
+}

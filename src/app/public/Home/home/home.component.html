@@ -1,0 +1,32 @@
+<div class="center-wrapper">
+  <div class="parent">
+    <div class="children-grid-1" (click)="openPopup('acerca')">
+      <p>Acerca...</p>
+    </div>
+    <div class="children-grid-2" (click)="openPopup('eventos')">
+      <p>Eventos</p>
+    </div>
+    <div class="children-grid-3" (click)="openPopup('musica')">
+      <p>Musica</p>
+    </div>
+    <div class="children-grid-4" (click)="openPopup('galeria')">
+      <p>Galeria</p>
+    </div>
+    <div class="children-grid-5" (click)="openPopup('cancionero')">
+      <p>Cancionero</p>
+    </div>
+  </div>
+</div>
+
+<div class="popup-overlay" *ngIf="activePopup">
+  <div class="popup-content">
+    <button class="close-btn" (click)="closePopup()">✕</button>
+    <ng-container [ngSwitch]="activePopup">
+      <p *ngSwitchCase="'acerca'">Contenido de Acerca de...</p>
+      <p *ngSwitchCase="'eventos'">Contenido de Eventos...</p>
+      <p *ngSwitchCase="'musica'">Contenido de Música...</p>
+      <p *ngSwitchCase="'galeria'"><app-gallery /></p>
+      <p *ngSwitchCase="'cancionero'">cancinero</p>
+    </ng-container>
+  </div>
+</div>
