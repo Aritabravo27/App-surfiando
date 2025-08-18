@@ -1,22 +1,16 @@
-import { NgIf, NgSwitch,NgSwitchCase } from '@angular/common';
-import { Component, ViewChild, ElementRef } from '@angular/core';
-import { GalleryComponent } from '../../gallery/gallery.component';
+import { Component } from '@angular/core';
+import { PopupService } from '../../../shared/popup.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [NgSwitch,NgIf,GalleryComponent,NgSwitchCase],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.scss'
+  styleUrls: ['./home.component.scss']
 })
 export class HomeComponent {
-  activePopup: string | null = null;
+  constructor(private popup: PopupService) {}
 
-  openPopup(tipo: string) {
-    this.activePopup = tipo;
-  }
-
-  closePopup() {
-    this.activePopup = null;
+  openPopup(tipo: 'acerca' | 'eventos' | 'musica' | 'galeria' | 'cancionero') {
+    this.popup.open(tipo);
   }
 }

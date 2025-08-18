@@ -1,0 +1,130 @@
+.albums-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.album-card {
+  background: #111;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+}
+
+.album-cover {
+  position: relative;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+  }
+
+  .album-meta {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 8px 12px;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.7) 100%);
+    color: #fff;
+    font-family: var(--font-family);
+    h3 { margin: 0 0 4px; font-size: 1rem; font-weight: 600; }
+    span { opacity: .85; font-size: .85rem; }
+  }
+}
+
+.album-detail {
+  display: grid;
+  gap: 16px;
+
+  .detail-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .back-btn {
+      align-self: flex-start;
+      background: var(--light-cream);
+      color: var(--dark-brown);
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .head-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .cover {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 12px;
+      }
+      h2 { margin: 0 0 4px; font-family: var(--font-family);}
+      p  { margin: 0; opacity: .8;font-family: var(--font-family); }
+    }
+  }
+}
+
+.video-grid.three-per-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 por fila */
+  gap: 12px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* tablet */
+  }
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr; /* mobile */
+  }
+}
+
+.video-item {
+  position: relative;
+    &:hover {
+        cursor: pointer;
+    }
+  .thumb {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+  }
+
+  iframe {
+    width: 100%;
+    height: 180px;
+    border: 0;
+    border-radius: 8px;
+  }
+
+  .play-overlay {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 36px;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0,0,0,.6);
+    background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.35) 100%);
+    pointer-events: none;
+  }
+
+  .video-title {
+    margin-top: 6px;
+    font-size: .95rem;
+    color: #eee;
+    font-family: var(--font-family);
+  }
+}
