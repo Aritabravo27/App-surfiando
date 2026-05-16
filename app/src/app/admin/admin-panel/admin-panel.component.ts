@@ -83,48 +83,7 @@ export class AdminPanelComponent implements OnInit {
     this.configService.getConfig().subscribe({
       next: (c) => {
         this.config = c;
-        this.clipsText = c.videos.clips.map((x) => x.url).join('\n');
-        this.vivosText = c.videos.vivos.map((x) => x.url).join('\n');
-        this.imagesText = (c.gallery.images ?? []).map((x) => x.url).join('\n');
-        this.tapasText = (c.gallery.tapas ?? []).map((x) => x.url).join('\n');
-        this.fotosEnVivoText = (c.gallery.fotosEnVivo ?? []).map((x) => x.url).join('\n');
-        this.cambalacheText = (c.gallery.cambalache ?? []).map((x) => x.url).join('\n');
-        this.socialInstagram = c.social?.instagram ?? '';
-        this.socialYoutube = c.social?.youtube ?? '';
-        this.socialSpotify = c.social?.spotify ?? '';
-        this.socialBandcamp = c.social?.bandcamp ?? '';
-        this.socialEmail = (c.social?.email ?? '').replace(/^mailto:/i, '');
-        this.socialPhone = c.social?.phone ?? '';
-        this.eventRows = (c.events ?? []).map((e) => ({
-          name: e.name,
-          date:
-            e.date && e.date.length >= 10 && /^\d{4}-\d{2}-\d{2}/.test(e.date)
-              ? e.date.slice(0, 10)
-              : e.date,
-          location: e.location,
-          ctaUrl: e.ctaUrl,
-        }));
-        this.merchRows = (c.merch ?? []).map((m) => ({
-          name: m.name,
-          photoUrl: m.photoUrl,
-          linkUrl: m.linkUrl,
-        }));
-        this.teamRows = (c.about?.team ?? []).map((t) => ({
-          name: t.name,
-          role: t.role,
-          bio: t.bio ?? '',
-          photoUrl: t.photoUrl,
-          linkUrl: t.linkUrl,
-        }));
-        this.aboutBio = c.about?.bio ?? '';
-        this.albumRows = (c.music?.albums ?? []).map((a: SiteMusicAlbumConfig) => ({
-          title: a.title,
-          coverUrl: a.coverUrl,
-          videos: (a.videos ?? []).map((v: SiteMusicVideoConfig) => ({
-            youtubeId: v.youtubeId,
-            title: v.title ?? '',
-          })),
-        }));
+        this.applyConfigToForm(c);
         this.loading = false;
       },
       error: (err) => {
@@ -136,24 +95,23 @@ export class AdminPanelComponent implements OnInit {
 
   save(): void {
     if (!this.config) return;
-    this.saving = true;
     this.message = '';
     this.error = '';
+
+    const eventError = this.validateEventRowsBeforeSave();
+    if (eventError) {
+      this.error = eventError;
+      return;
+    }
+
+    this.saving = true;
     const clips = this.linesToVideos(this.clipsText);
     const vivos = this.linesToVideos(this.vivosText);
     const images = this.linesToGalleryImages(this.imagesText);
     const tapas = this.linesToGalleryImages(this.tapasText);
     const fotosEnVivo = this.linesToGalleryImages(this.fotosEnVivoText);
     const cambalache = this.linesToGalleryImages(this.cambalacheText);
-    const events = this.eventRows
-      .filter((e) => e.name.trim() && e.date.trim() && e.location.trim() && e.ctaUrl.trim())
-      .map((e, i) => ({
-        name: e.name.trim(),
-        date: e.date.trim(),
-        location: e.location.trim(),
-        ctaUrl: e.ctaUrl.trim(),
-        order: i,
-      }));
+    const events = this.buildEventsFromRows();
     const merch = this.merchRows
       .filter((m) => m.name.trim() && m.photoUrl.trim() && m.linkUrl.trim())
       .map((m, i) => ({
@@ -221,6 +179,7 @@ export class AdminPanelComponent implements OnInit {
     this.configService.saveConfig(body).subscribe({
       next: (saved) => {
         this.config = saved;
+        this.applyConfigToForm(saved);
         this.saving = false;
         this.message = 'Guardado correctamente.';
       },
@@ -510,6 +469,115 @@ export class AdminPanelComponent implements OnInit {
     if (mEmbed) return mEmbed[1];
     if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
     return null;
+  }
+
+  private applyConfigToForm(c: SiteConfig): void {
+    this.clipsText = c.videos.clips.map((x) => x.url).join('\n');
+    this.vivosText = c.videos.vivos.map((x) => x.url).join('\n');
+    this.imagesText = (c.gallery.images ?? []).map((x) => x.url).join('\n');
+    this.tapasText = (c.gallery.tapas ?? []).map((x) => x.url).join('\n');
+    this.fotosEnVivoText = (c.gallery.fotosEnVivo ?? []).map((x) => x.url).join('\n');
+    this.cambalacheText = (c.gallery.cambalache ?? []).map((x) => x.url).join('\n');
+    this.socialInstagram = c.social?.instagram ?? '';
+    this.socialYoutube = c.social?.youtube ?? '';
+    this.socialSpotify = c.social?.spotify ?? '';
+    this.socialBandcamp = c.social?.bandcamp ?? '';
+    this.socialEmail = (c.social?.email ?? '').replace(/^mailto:/i, '');
+    this.socialPhone = c.social?.phone ?? '';
+    this.eventRows = (c.events ?? []).map((e) => ({
+      name: e.name,
+      date:
+        e.date && e.date.length >= 10 && /^\d{4}-\d{2}-\d{2}/.test(e.date)
+          ? e.date.slice(0, 10)
+          : e.date,
+      location: e.location,
+      ctaUrl: e.ctaUrl,
+    }));
+    this.merchRows = (c.merch ?? []).map((m) => ({
+      name: m.name,
+      photoUrl: m.photoUrl,
+      linkUrl: m.linkUrl,
+    }));
+    this.teamRows = (c.about?.team ?? []).map((t) => ({
+      name: t.name,
+      role: t.role,
+      bio: t.bio ?? '',
+      photoUrl: t.photoUrl,
+      linkUrl: t.linkUrl,
+    }));
+    this.aboutBio = c.about?.bio ?? '';
+    this.albumRows = (c.music?.albums ?? []).map((a: SiteMusicAlbumConfig) => ({
+      title: a.title,
+      coverUrl: a.coverUrl,
+      videos: (a.videos ?? []).map((v: SiteMusicVideoConfig) => ({
+        youtubeId: v.youtubeId,
+        title: v.title ?? '',
+      })),
+    }));
+  }
+
+  private isEventRowEmpty(e: SiteEventConfig): boolean {
+    return !e.name.trim() && !e.date.trim() && !e.location.trim() && !e.ctaUrl.trim();
+  }
+
+  private isEventRowComplete(e: SiteEventConfig): boolean {
+    const ctaUrl = this.normalizeHttpUrl(e.ctaUrl);
+    return !!(
+      e.name.trim() &&
+      e.date.trim() &&
+      e.location.trim() &&
+      ctaUrl &&
+      this.isHttpUrl(ctaUrl)
+    );
+  }
+
+  private validateEventRowsBeforeSave(): string | null {
+    const invalid: string[] = [];
+    this.eventRows.forEach((e, i) => {
+      if (this.isEventRowEmpty(e)) return;
+      if (!this.isEventRowComplete(e)) {
+        invalid.push(e.name.trim() || `Evento ${i + 1}`);
+      }
+    });
+    if (invalid.length === 0) return null;
+    return (
+      `Hay eventos incompletos (${invalid.join(', ')}): cada uno necesita nombre, fecha, lugar ` +
+      'y enlace con https:// (ej. https://entrada.com).'
+    );
+  }
+
+  private buildEventsFromRows(): SiteEventConfig[] {
+    const out: SiteEventConfig[] = [];
+    for (const e of this.eventRows) {
+      if (this.isEventRowEmpty(e)) continue;
+      const ctaUrl = this.normalizeHttpUrl(e.ctaUrl);
+      if (
+        !e.name.trim() ||
+        !e.date.trim() ||
+        !e.location.trim() ||
+        !ctaUrl ||
+        !this.isHttpUrl(ctaUrl)
+      ) {
+        continue;
+      }
+      out.push({
+        name: e.name.trim(),
+        date: e.date.trim(),
+        location: e.location.trim(),
+        ctaUrl,
+        order: out.length,
+      });
+    }
+    return out;
+  }
+
+  private normalizeHttpUrl(raw: string): string {
+    const s = raw.trim();
+    if (!s) return '';
+    if (this.isHttpUrl(s)) return s;
+    const withHttps = `https://${s.replace(/^\/+/, '')}`;
+    if (this.isHttpUrl(withHttps)) return withHttps;
+    return s;
   }
 
   private isHttpUrl(s: string): boolean {

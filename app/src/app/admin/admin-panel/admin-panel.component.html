@@ -222,7 +222,7 @@
     <div *ngIf="adminTab === 'events'" role="tabpanel">
       <section class="admin-card admin-card--step">
         <h2>Eventos</h2>
-        <p class="admin-card__intro">Nombre, fecha, lugar, enlace del botón.</p>
+        <p class="admin-card__intro">Nombre, fecha, lugar y enlace del botón (obligatorio, con https://).</p>
         <button type="button" class="btn btn--secondary" (click)="addEventRow()">Agregar evento</button>
         <div class="admin-entity-list" *ngFor="let ev of eventRows; let i = index">
           <div class="admin-entity-card">
@@ -233,8 +233,13 @@
             <input type="date" [(ngModel)]="ev.date" [name]="'ev-date-' + i" />
             <label class="admin-label admin-label--small">Lugar</label>
             <input type="text" [(ngModel)]="ev.location" [name]="'ev-loc-' + i" />
-            <label class="admin-label admin-label--small">Enlace (CTA)</label>
-            <input type="url" [(ngModel)]="ev.ctaUrl" [name]="'ev-cta-' + i" />
+            <label class="admin-label admin-label--small">Enlace (CTA) (obligatorio)</label>
+            <input
+              type="text"
+              [(ngModel)]="ev.ctaUrl"
+              [name]="'ev-cta-' + i"
+              placeholder="https://..." />
+            <p class="admin-hint">Obligatorio. URL con https:// (ej. https://entradas.com o www.ejemplo.com).</p>
           </div>
         </div>
       </section>

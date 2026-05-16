@@ -7,6 +7,15 @@ function isHttpUrl(s) {
   }
 }
 
+function normalizeHttpUrl(raw) {
+  const s = String(raw ?? '').trim();
+  if (!s) return '';
+  if (isHttpUrl(s)) return s;
+  const withHttps = `https://${s.replace(/^\/+/, '')}`;
+  if (isHttpUrl(withHttps)) return withHttps;
+  return s;
+}
+
 const MAX_JSON_CHARS = 100_000;
 
 function normalizeGalleryImageArray(arr) {
@@ -32,8 +41,9 @@ function normalizeEventsArray(arr) {
       const date = typeof item.date === 'string' ? item.date.trim().slice(0, 50) : '';
       const location =
         typeof item.location === 'string' ? item.location.trim().slice(0, 300) : '';
-      const ctaUrl =
-        typeof item.ctaUrl === 'string' ? item.ctaUrl.trim() : '';
+      const ctaUrl = normalizeHttpUrl(
+        typeof item.ctaUrl === 'string' ? item.ctaUrl : ''
+      );
       if (!name || !date || !location || !isHttpUrl(ctaUrl)) return null;
       const order =
         typeof item.order === 'number' && Number.isFinite(item.order) ? item.order : i;
