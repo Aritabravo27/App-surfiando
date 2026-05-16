@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "node app.js",
+    "seed:site-config": "node scripts/seed-site-config-to-firestore.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

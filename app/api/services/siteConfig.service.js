@@ -19,6 +19,55 @@ function getDataFilePath() {
   return path.join(getDataDir(), 'data.json');
 }
 
+/** En Netlify/Lambda el JSON en /tmp no se comparte entre invocations: la fuente de verdad es Firestore. */
+function useFirestoreForSiteConfig() {
+  return !!(process.env.NETLIFY === 'true' || process.env.AWS_LAMBDA_FUNCTION_NAME);
+}
+
+function firestoreToPlain(data) {
+  if (data === null || data === undefined) return data;
+  if (typeof data.toDate === 'function') {
+    return data.toDate().toISOString();
+  }
+  if (Array.isArray(data)) {
+    return data.map(firestoreToPlain);
+  }
+  if (typeof data === 'object') {
+    const o = {};
+    for (const [k, v] of Object.entries(data)) {
+      o[k] = firestoreToPlain(v);
+    }
+    return o;
+  }
+  return data;
+}
+
+async function loadSiteConfigFromFirestore() {
+  try {
+    const { db } = require('../config/firebase');
+    const { config: appCfg } = require('../config/appConfig');
+    const ref = db
+      .collection(appCfg.firestore.collections.siteConfig)
+      .doc(appCfg.firestore.siteConfigDocId);
+    const snap = await ref.get();
+    if (!snap.exists) return null;
+    return mergeWithDefaults(firestoreToPlain(snap.data()));
+  } catch (err) {
+    console.warn('[siteConfig] Firestore read failed:', err.message);
+    return null;
+  }
+}
+
+async function saveSiteConfigToFirestore(payload) {
+  const { db } = require('../config/firebase');
+  const { config: appCfg } = require('../config/appConfig');
+  const plain = JSON.parse(JSON.stringify(payload));
+  await db
+    .collection(appCfg.firestore.collections.siteConfig)
+    .doc(appCfg.firestore.siteConfigDocId)
+    .set(plain);
+}
+
 function stripUndefinedDeep(value) {
   if (value === undefined) return undefined;
   if (Array.isArray(value)) {
@@ -53,6 +102,11 @@ async function ensureSiteDataFile() {
 }
 
 async function getSiteConfig() {
+  if (useFirestoreForSiteConfig()) {
+    const fromFs = await loadSiteConfigFromFirestore();
+    if (fromFs) return fromFs;
+  }
+
   await ensureSiteDataFile();
   const file = getDataFilePath();
   const raw = await fs.readFile(file, 'utf8');
@@ -75,6 +129,16 @@ async function saveSiteConfig(validatedConfig) {
   const tmp = `${file}.tmp`;
   await fs.writeFile(tmp, JSON.stringify(payload), 'utf8');
   await fs.rename(tmp, file);
+
+  if (useFirestoreForSiteConfig()) {
+    try {
+      await saveSiteConfigToFirestore(payload);
+    } catch (err) {
+      console.error('[siteConfig] Firestore write failed:', err);
+      throw err;
+    }
+  }
+
   return getSiteConfig();
 }
 

@@ -6,7 +6,8 @@
     "build": "npm run build --prefix app",
     "start": "npm run start --prefix api",
     "start:mono": "cross-env SERVE_STATIC=../app/dist/app/browser npm run start --prefix api",
-    "build:netlify": "npm ci --prefix api && npm ci --prefix app && npm run netlify-build --prefix app"
+    "build:netlify": "npm ci --prefix api && npm ci --prefix app && npm run netlify-build --prefix app",
+    "seed:site-config": "npm run seed:site-config --prefix api"
   },
   "dependencies": {
     "serverless-http": "^4.0.0"
