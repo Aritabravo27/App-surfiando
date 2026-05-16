@@ -14,7 +14,8 @@ import { Component, Input } from '@angular/core';
   styleUrl: './spinner.component.scss',
 })
 export class SpinnerComponent {
-  @Input() src = 'assets/tu-logo.png';
+  @Input() src =
+    'https://surfiando.netlify.app/media/92133101_255878032121471_8944472217498982430_n-BVKTUFH7.jpg';
   @Input() size = 64;
   @Input() speed: 'slow' | 'normal' | 'fast' = 'normal';
   @Input() overlay = false;         // true = pantalla completa
