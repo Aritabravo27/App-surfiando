@@ -1,0 +1,10 @@
+# Root & tooling
+node_modules/
+.netlify/
+*.log
+.DS_Store
+Thumbs.db
+
+# Local env (see api/.gitignore for api secrets)
+.env
+.env.*

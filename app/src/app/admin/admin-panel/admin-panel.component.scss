@@ -1,0 +1,42 @@
+:host {
+  display: block;
+}
+
+.admin-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(1rem, 2vw, 1.75rem);
+  margin-bottom: clamp(1.25rem, 3vw, 2rem);
+  width: 100%;
+  padding-bottom: 1.35rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-top__text {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.admin-top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.admin-card--step h2,
+.admin-section-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.admin-loading {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--admin-text-muted);
+}

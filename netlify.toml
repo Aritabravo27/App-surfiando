@@ -1,0 +1,45 @@
+[build]
+  publish = "app/dist/app/browser"
+  command = "npm run build:netlify"
+
+[build.environment]
+  NODE_VERSION = "20"
+  SECRETS_SCAN_OMIT_KEYS = "PORT,ADMIN_PASSWORD,FIREBASE_PROJECT_ID,FIREBASE_STORAGE_BUCKET,FIRESTORE_COLLECTION,FIRESTORE_GALLERY_COLLECTION,FIRESTORE_AUDIO_COLLECTION,FIRESTORE_SITE_CONFIG_COLLECTION,GOOGLE_APPLICATION_CREDENTIALS,JWT_EXPIRES"
+  SECRETS_SCAN_OMIT_PATHS = "package-lock.json,app/package-lock.json,api/package-lock.json,app/src/assets/92133101_255878032121471_8944472217498982430_n.jpg"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# FIREBASE_SERVICE_ACCOUNT_JSON: definilo solo en Netlify (Site settings → Environment variables).
+# No lo pongas en este repo: GitHub bloquea el push si detecta credenciales de service account.
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=60, immutable"
+
+[[headers]]
+  for = "/media/*"
+  [headers.values]
+    Cache-Control = "public, max-age=60, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "0"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"

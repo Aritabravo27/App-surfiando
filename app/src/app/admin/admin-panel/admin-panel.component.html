@@ -1,0 +1,320 @@
+<div class="admin-shell">
+  <div class="admin-wide" *ngIf="!loading && config; else loadingTpl">
+    <header class="admin-top">
+      <div class="admin-top__text">
+        <h1>Cambiar cosas del sitio</h1>
+        <p class="admin-lead admin-lead--tight">
+          Los cambios recién quedan en internet cuando tocás <strong>«Guardar todo en el sitio»</strong>. Fotos de galería van por carpeta; merch y equipo tienen sus carpetas.
+        </p>
+      </div>
+      <div class="admin-top-actions" role="group" aria-label="Acciones del panel">
+        <button type="button" class="btn btn--primary" (click)="save()" [disabled]="saving">
+          {{ saving ? 'Guardando…' : 'Guardar todo en el sitio' }}
+        </button>
+        <button type="button" class="btn btn--secondary" (click)="load()">Actualizar datos</button>
+        <button type="button" class="btn btn--danger" (click)="logout()">Salir</button>
+      </div>
+    </header>
+
+    <p class="alert alert--ok" *ngIf="message" role="status">{{ message }}</p>
+    <p class="alert alert--err" *ngIf="error" role="alert">{{ error }}</p>
+    <p class="alert alert--ok" *ngIf="uploadMsg" role="status">{{ uploadMsg }}</p>
+    <p class="alert alert--err" *ngIf="uploadErr" role="alert">{{ uploadErr }}</p>
+
+    <nav class="admin-tabs" role="tablist" aria-label="Secciones del panel">
+      <button type="button" role="tab" class="admin-tabs__btn" [class.admin-tabs__btn--active]="adminTab === 'contact'" [attr.aria-selected]="adminTab === 'contact'" (click)="adminTab = 'contact'">
+        Contacto
+      </button>
+      <button type="button" role="tab" class="admin-tabs__btn" [class.admin-tabs__btn--active]="adminTab === 'music'" [attr.aria-selected]="adminTab === 'music'" (click)="adminTab = 'music'">
+        Música
+      </button>
+      <button type="button" role="tab" class="admin-tabs__btn" [class.admin-tabs__btn--active]="adminTab === 'events'" [attr.aria-selected]="adminTab === 'events'" (click)="adminTab = 'events'">
+        Eventos
+      </button>
+      <button type="button" role="tab" class="admin-tabs__btn" [class.admin-tabs__btn--active]="adminTab === 'merch'" [attr.aria-selected]="adminTab === 'merch'" (click)="adminTab = 'merch'">
+        Merch
+      </button>
+      <button type="button" role="tab" class="admin-tabs__btn" [class.admin-tabs__btn--active]="adminTab === 'about'" [attr.aria-selected]="adminTab === 'about'" (click)="adminTab = 'about'">
+        Acerca de
+      </button>
+    </nav>
+
+    <div *ngIf="adminTab === 'music'" role="tabpanel">
+      <section class="admin-card admin-card--step">
+        <h2 class="admin-section-title">Álbumes (música en el sitio)</h2>
+        <p class="admin-card__intro">Título, URL de tapa o subí la imagen (se guarda en Tapas), y videos de YouTube por álbum.</p>
+        <button type="button" class="btn btn--secondary" (click)="addAlbumRow()">Agregar álbum</button>
+        <div class="admin-entity-list" *ngFor="let al of albumRows; let ai = index">
+          <div class="admin-entity-card">
+            <button type="button" class="btn btn--danger admin-entity-remove" (click)="removeAlbumRow(ai)">Quitar álbum</button>
+            <label class="admin-label admin-label--small">Título del álbum</label>
+            <input type="text" [(ngModel)]="al.title" [name]="'al-title-' + ai" />
+            <label class="admin-label admin-label--small">URL de la tapa</label>
+            <input type="url" [(ngModel)]="al.coverUrl" [name]="'al-cover-' + ai" />
+            <input
+              #albumCoverIn
+              type="file"
+              class="sr-file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              (change)="onAlbumCoverFileChange($event, ai)"
+              [disabled]="uploadBusy" />
+            <button type="button" class="btn btn--secondary" (click)="albumCoverIn.click()" [disabled]="uploadBusy">
+              {{ isRowPhotoUploading('album-cover', ai) ? 'Subiendo…' : 'Subir tapa' }}
+            </button>
+            <p class="admin-label admin-label--small" style="margin-top: 1rem">Videos (ID o enlace de YouTube)</p>
+            <button type="button" class="btn btn--secondary" (click)="addAlbumVideoRow(ai)">Agregar video</button>
+            <div *ngFor="let vid of al.videos; let vi = index" class="admin-entity-card" style="margin-top: 0.75rem">
+              <button type="button" class="btn btn--danger admin-entity-remove" (click)="removeAlbumVideoRow(ai, vi)">Quitar video</button>
+              <label class="admin-label admin-label--small">YouTube</label>
+              <input type="text" [(ngModel)]="vid.youtubeId" [name]="'al-vid-yt-' + ai + '-' + vi" placeholder="URL o ID" />
+              <label class="admin-label admin-label--small">Título (opcional)</label>
+              <input type="text" [(ngModel)]="vid.title" [name]="'al-vid-title-' + ai + '-' + vi" />
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="admin-card admin-card--step">
+        <h2 class="admin-section-title">Fotos de la galería (tres carpetas)</h2>
+        <p class="admin-card__intro">
+          Elegí la carpeta, subí fotos o pegá URLs (una por línea).
+        </p>
+        <p class="admin-hint admin-hint--badge">
+          JPG, PNG, WebP o GIF · hasta <strong>5 MB</strong> por foto · hasta <strong>15</strong> por vez.
+        </p>
+
+        <div class="admin-album-grid">
+          <article class="admin-album-card">
+            <header class="admin-album-card__head">
+              <span class="admin-album-card__badge">Carpeta en el servidor</span>
+              <h3 class="admin-album-card__title">Tapas</h3>
+              <p class="admin-album-card__blurb">Portadas, flyers, arte de discos.</p>
+            </header>
+            <div
+              class="admin-dropzone admin-dropzone--compact"
+              [class.admin-dropzone--active]="isDropActive('tapas')"
+              (dragover)="onDragOver($event, 'tapas')"
+              (dragleave)="onDragLeave($event)"
+              (drop)="onDrop($event, 'tapas')">
+              <input
+                #fileTapas
+                type="file"
+                class="sr-file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                (change)="onFileAlbumChange($event, 'tapas')"
+                [disabled]="uploadBusy" />
+              <p class="admin-dropzone__cta">Arrastrá acá o elegí archivos</p>
+              <button type="button" class="btn btn--primary btn--block" (click)="fileTapas.click()" [disabled]="uploadBusy">
+                {{ isUploading('tapas') ? 'Subiendo…' : 'Elegir fotos — Tapas' }}
+              </button>
+            </div>
+            <label class="admin-label admin-label--small" for="tapas-urls">URLs (una por línea)</label>
+            <textarea id="tapas-urls" rows="4" [(ngModel)]="tapasText" name="tapas"></textarea>
+          </article>
+
+          <article class="admin-album-card">
+            <header class="admin-album-card__head">
+              <span class="admin-album-card__badge">Carpeta en el servidor</span>
+              <h3 class="admin-album-card__title">Fotos en vivo</h3>
+              <p class="admin-album-card__blurb">Shows, ensayos, escena.</p>
+            </header>
+            <div
+              class="admin-dropzone admin-dropzone--compact"
+              [class.admin-dropzone--active]="isDropActive('fotos-en-vivo')"
+              (dragover)="onDragOver($event, 'fotos-en-vivo')"
+              (dragleave)="onDragLeave($event)"
+              (drop)="onDrop($event, 'fotos-en-vivo')">
+              <input
+                #fileVivo
+                type="file"
+                class="sr-file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                (change)="onFileAlbumChange($event, 'fotos-en-vivo')"
+                [disabled]="uploadBusy" />
+              <p class="admin-dropzone__cta">Arrastrá acá o elegí archivos</p>
+              <button type="button" class="btn btn--primary btn--block" (click)="fileVivo.click()" [disabled]="uploadBusy">
+                {{ isUploading('fotos-en-vivo') ? 'Subiendo…' : 'Elegir fotos — En vivo' }}
+              </button>
+            </div>
+            <label class="admin-label admin-label--small" for="vivo-urls">URLs (una por línea)</label>
+            <textarea id="vivo-urls" rows="4" [(ngModel)]="fotosEnVivoText" name="fotosEnVivo"></textarea>
+          </article>
+
+          <article class="admin-album-card">
+            <header class="admin-album-card__head">
+              <span class="admin-album-card__badge">Carpeta en el servidor</span>
+              <h3 class="admin-album-card__title">Cambalache</h3>
+              <p class="admin-album-card__blurb">Variedades, feria.</p>
+            </header>
+            <div
+              class="admin-dropzone admin-dropzone--compact"
+              [class.admin-dropzone--active]="isDropActive('cambalache')"
+              (dragover)="onDragOver($event, 'cambalache')"
+              (dragleave)="onDragLeave($event)"
+              (drop)="onDrop($event, 'cambalache')">
+              <input
+                #fileCambalache
+                type="file"
+                class="sr-file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                (change)="onFileAlbumChange($event, 'cambalache')"
+                [disabled]="uploadBusy" />
+              <p class="admin-dropzone__cta">Arrastrá acá o elegí archivos</p>
+              <button type="button" class="btn btn--primary btn--block" (click)="fileCambalache.click()" [disabled]="uploadBusy">
+                {{ isUploading('cambalache') ? 'Subiendo…' : 'Elegir fotos — Cambalache' }}
+              </button>
+            </div>
+            <label class="admin-label admin-label--small" for="cambalache-urls">URLs (una por línea)</label>
+            <textarea id="cambalache-urls" rows="4" [(ngModel)]="cambalacheText" name="cambalache"></textarea>
+          </article>
+        </div>
+
+        <div class="admin-prev-strip" *ngIf="lastUploadedPreview.length">
+          <p class="admin-prev-strip__title">Recién subidas ({{ lastUploadedFolderLabel }})</p>
+          <div class="admin-prev-grid">
+            <div class="admin-prev" *ngFor="let u of lastUploadedPreview">
+              <img [src]="u" alt="" />
+            </div>
+          </div>
+        </div>
+
+        <details class="admin-details">
+          <summary class="admin-details__summary">Lista general de fotos (compatibilidad)</summary>
+          <p class="admin-hint">Una URL por línea. Opcional si usás solo las tres carpetas.</p>
+          <textarea id="images-list" rows="4" [(ngModel)]="imagesText" name="images"></textarea>
+        </details>
+      </section>
+
+      <section class="admin-card admin-card--step">
+        <h2>Videos — Clips</h2>
+        <p class="admin-card__intro">Un enlace de YouTube por línea.</p>
+        <textarea rows="6" [(ngModel)]="clipsText" name="clips"></textarea>
+      </section>
+
+      <section class="admin-card admin-card--step">
+        <h2>Videos — Vivo</h2>
+        <p class="admin-card__intro">Un enlace de YouTube por línea.</p>
+        <textarea rows="6" [(ngModel)]="vivosText" name="vivos"></textarea>
+      </section>
+    </div>
+
+    <div *ngIf="adminTab === 'contact'" role="tabpanel">
+      <section class="admin-card admin-card--step">
+        <h2>Contacto y redes</h2>
+        <p class="admin-card__intro">Enlaces completos. En mail solo el correo sin mailto.</p>
+        <label class="admin-label">Instagram</label>
+        <input type="url" [(ngModel)]="socialInstagram" name="ig" placeholder="https://www.instagram.com/..." />
+        <label class="admin-label" style="margin-top: 1rem">YouTube</label>
+        <input type="url" [(ngModel)]="socialYoutube" name="yt" />
+        <label class="admin-label" style="margin-top: 1rem">Spotify</label>
+        <input type="url" [(ngModel)]="socialSpotify" name="sp" />
+        <label class="admin-label" style="margin-top: 1rem">Bandcamp</label>
+        <input type="url" [(ngModel)]="socialBandcamp" name="bc" />
+        <label class="admin-label" style="margin-top: 1rem">Correo electrónico</label>
+        <input type="text" [(ngModel)]="socialEmail" name="em" placeholder="correo@gmail.com" />
+        <label class="admin-label" style="margin-top: 1rem">Teléfono</label>
+        <input type="text" [(ngModel)]="socialPhone" name="phone" placeholder="+54 9 11 …" />
+      </section>
+    </div>
+
+    <div *ngIf="adminTab === 'events'" role="tabpanel">
+      <section class="admin-card admin-card--step">
+        <h2>Eventos</h2>
+        <p class="admin-card__intro">Nombre, fecha, lugar, enlace del botón.</p>
+        <button type="button" class="btn btn--secondary" (click)="addEventRow()">Agregar evento</button>
+        <div class="admin-entity-list" *ngFor="let ev of eventRows; let i = index">
+          <div class="admin-entity-card">
+            <button type="button" class="btn btn--danger admin-entity-remove" (click)="removeEventRow(i)">Quitar</button>
+            <label class="admin-label admin-label--small">Nombre</label>
+            <input type="text" [(ngModel)]="ev.name" [name]="'ev-name-' + i" />
+            <label class="admin-label admin-label--small">Fecha</label>
+            <input type="date" [(ngModel)]="ev.date" [name]="'ev-date-' + i" />
+            <label class="admin-label admin-label--small">Lugar</label>
+            <input type="text" [(ngModel)]="ev.location" [name]="'ev-loc-' + i" />
+            <label class="admin-label admin-label--small">Enlace (CTA)</label>
+            <input type="url" [(ngModel)]="ev.ctaUrl" [name]="'ev-cta-' + i" />
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div *ngIf="adminTab === 'merch'" role="tabpanel">
+      <section class="admin-card admin-card--step">
+        <h2>Merch</h2>
+        <p class="admin-card__intro">Foto (URL o subí a Storage), nombre visible al pasar el mouse, enlace de destino.</p>
+        <button type="button" class="btn btn--secondary" (click)="addMerchRow()">Agregar producto</button>
+        <div class="admin-entity-list" *ngFor="let m of merchRows; let i = index">
+          <div class="admin-entity-card">
+            <button type="button" class="btn btn--danger admin-entity-remove" (click)="removeMerchRow(i)">Quitar</button>
+            <label class="admin-label admin-label--small">Nombre</label>
+            <input type="text" [(ngModel)]="m.name" [name]="'merch-name-' + i" />
+            <label class="admin-label admin-label--small">URL de la foto</label>
+            <input type="url" [(ngModel)]="m.photoUrl" [name]="'merch-photo-' + i" />
+            <input
+              #merchFileIn
+              type="file"
+              class="sr-file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              (change)="onMerchFileChange($event, i)"
+              [disabled]="uploadBusy" />
+            <button type="button" class="btn btn--secondary" (click)="merchFileIn.click()" [disabled]="uploadBusy">
+              {{ isRowPhotoUploading('merch', i) ? 'Subiendo…' : 'Subir foto (merch)' }}
+            </button>
+            <label class="admin-label admin-label--small">Enlace de destino</label>
+            <input type="url" [(ngModel)]="m.linkUrl" [name]="'merch-link-' + i" />
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div *ngIf="adminTab === 'about'" role="tabpanel">
+      <section class="admin-card admin-card--step">
+        <h2>Acerca del proyecto</h2>
+        <label class="admin-label">Biografía general</label>
+        <textarea rows="6" [(ngModel)]="aboutBio" name="aboutBio" placeholder="Texto que aparece antes del equipo en el sitio."></textarea>
+      </section>
+      <section class="admin-card admin-card--step">
+        <h2>Equipo</h2>
+        <p class="admin-card__intro">Foto, nombre, rol, bio opcional, enlace al tocar la foto.</p>
+        <button type="button" class="btn btn--secondary" (click)="addTeamRow()">Agregar persona</button>
+        <div class="admin-entity-list" *ngFor="let t of teamRows; let i = index">
+          <div class="admin-entity-card">
+            <button type="button" class="btn btn--danger admin-entity-remove" (click)="removeTeamRow(i)">Quitar</button>
+            <label class="admin-label admin-label--small">Nombre</label>
+            <input type="text" [(ngModel)]="t.name" [name]="'team-name-' + i" />
+            <label class="admin-label admin-label--small">Rol</label>
+            <input type="text" [(ngModel)]="t.role" [name]="'team-role-' + i" />
+            <label class="admin-label admin-label--small">Bio (opcional)</label>
+            <textarea rows="3" [(ngModel)]="t.bio" [name]="'team-bio-' + i"></textarea>
+            <label class="admin-label admin-label--small">URL de la foto</label>
+            <input type="url" [(ngModel)]="t.photoUrl" [name]="'team-photo-' + i" />
+            <input
+              #teamFileIn
+              type="file"
+              class="sr-file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              (change)="onTeamFileChange($event, i)"
+              [disabled]="uploadBusy" />
+            <button type="button" class="btn btn--secondary" (click)="teamFileIn.click()" [disabled]="uploadBusy">
+              {{ isRowPhotoUploading('team', i) ? 'Subiendo…' : 'Subir foto (equipo)' }}
+            </button>
+            <label class="admin-label admin-label--small">Enlace</label>
+            <input type="url" [(ngModel)]="t.linkUrl" [name]="'team-link-' + i" />
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <p class="admin-hint" style="text-align: center; margin-top: 2rem">
+      <a routerLink="/" class="admin-link">← Ir a la página principal</a>
+    </p>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="admin-wide admin-loading">
+      <p class="admin-card__intro" style="text-align: center; font-size: 1.2rem; font-weight: 700">Cargando el panel…</p>
+    </div>
+  </ng-template>
+</div>

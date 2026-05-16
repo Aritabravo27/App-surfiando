@@ -1,0 +1,74 @@
+.merch-popup {
+  width: 100%;
+}
+
+.merch-popup__title {
+  margin: 0 0 var(--space-4);
+  text-align: center;
+  font-family: var(--font-family);
+  color: var(--color-text-primary, var(--light-cream));
+  font-size: var(--text-xl);
+}
+
+.merch-popup__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-4);
+}
+
+.merch-popup__item {
+  position: relative;
+  display: block;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  text-decoration: none;
+  aspect-ratio: 1;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(244, 227, 193, 0.2);
+}
+
+.merch-popup__photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.merch-popup__cta {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  text-align: center;
+  font-family: var(--font-family);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--light-cream);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(20, 14, 10, 0.15) 40%,
+    rgba(43, 25, 18, 0.88) 100%
+  );
+  opacity: 0;
+  transition: opacity var(--transition-interactive);
+}
+
+.merch-popup__item:hover .merch-popup__cta,
+.merch-popup__item:focus-visible .merch-popup__cta {
+  opacity: 1;
+}
+
+.merch-popup__item:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.merch-popup__empty {
+  margin: 0;
+  font-family: var(--font-family);
+  color: var(--color-text-secondary, var(--light-cream));
+  opacity: 0.9;
+}

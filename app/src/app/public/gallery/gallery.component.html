@@ -1,0 +1,246 @@
+<div class="media-filter">
+
+  <div class="image-filter" [class.active]="activeTab === 'images'" (click)="setTab('images')">
+
+    Imágenes
+
+  </div>
+
+
+
+  <div class="video-filter" [class.active]="activeTab === 'videos'" (click)="setTab('videos')">
+
+    Videos
+
+  </div>
+
+</div>
+
+<app-spinner
+
+  *ngIf="isLoading"
+
+  src="https://firebasestorage.googleapis.com/v0/b/sufiando.firebasestorage.app/o/images%2F1755031017641_a0908967776_2.jpg?alt=media&token=fda53b4a-c591-4c75-bd8a-65318dfe4031"
+
+  [size]="84"
+
+  speed="normal"
+
+  [overlay]="true">
+
+</app-spinner>
+
+
+
+<!-- Imágenes -->
+
+<div *ngIf="activeTab === 'images'">
+
+  <div class="album-filter" *ngIf="useAlbumTabs" role="tablist" aria-label="Álbumes de fotos">
+
+    <div
+
+      *ngFor="let tab of photoAlbumTabs"
+
+      role="tab"
+
+      [class.active]="activePhotoAlbum === tab.id"
+
+      (click)="setPhotoAlbum(tab.id)">
+
+      {{ tab.label }}
+
+    </div>
+
+  </div>
+
+  <p class="album-empty" *ngIf="useAlbumTabs && !images.length">
+
+    Todavía no hay fotos en esta sección. Se pueden cargar desde el panel de administración.
+
+  </p>
+
+  <div class="image-gallery" *ngIf="images.length">
+
+    <div class="gallery-grid">
+
+      <div
+
+        *ngFor="let img of images; let i = index"
+
+        class="gallery-item"
+
+        role="button"
+
+        tabindex="0"
+
+        [attr.aria-label]="'Ampliar imagen ' + (i + 1) + ' de ' + images.length"
+
+        [ngStyle]="img.style"
+
+        [style.background-image]="'url(' + img.url + ')'"
+
+        title="Surfiando — clic para ampliar"
+
+        (click)="openModal(i)"
+
+        (keydown)="onItemKeydown($event, i)">
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<!-- Lightbox carrusel -->
+
+<div
+
+  *ngIf="isModalOpen && activeModalUrl"
+
+  class="gallery-lightbox"
+
+  role="presentation"
+
+  (click)="onOverlayClick($event)">
+
+  <div
+
+    #lightboxDialog
+
+    class="gallery-lightbox__dialog"
+
+    role="dialog"
+
+    aria-modal="true"
+
+    aria-label="Galería de imágenes ampliadas"
+
+    tabindex="-1"
+
+    (click)="$event.stopPropagation()">
+
+    <button type="button" class="gallery-lightbox__close" aria-label="Cerrar galería" (click)="closeModal()">
+
+      ×
+
+    </button>
+
+    <p class="gallery-lightbox__counter" aria-live="polite">{{ modalPositionLabel }}</p>
+
+    <button type="button" class="gallery-lightbox__nav gallery-lightbox__nav--prev" aria-label="Imagen anterior" (click)="prev()">
+
+      ‹
+
+    </button>
+
+    <button type="button" class="gallery-lightbox__nav gallery-lightbox__nav--next" aria-label="Imagen siguiente" (click)="next()">
+
+      ›
+
+    </button>
+
+    <div
+
+      #lightboxStage
+
+      class="gallery-lightbox__stage"
+
+      touch-action="pan-y"
+
+      (pointerdown)="onStagePointerDown($event)"
+
+      (pointerup)="onStagePointerUp($event)"
+
+      (pointercancel)="onStagePointerCancel($event)">
+
+      <img [src]="activeModalUrl" alt="Foto ampliada — Surfiando" />
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<div *ngIf="activeTab === 'videos'">
+
+  <div class="video-filter">
+
+    <div class="video-clip" [class.active]="activeVideoTab === 'clips'" (click)="setVideoTab('clips')">Clips</div>
+
+    <div class="video-live" [class.active]="activeVideoTab === 'vivos'" (click)="setVideoTab('vivos')">Vivo</div>
+
+  </div>
+
+
+
+  <!-- Clips -->
+
+  <div class="video-gallery" *ngIf="activeVideoTab === 'clips'">
+
+    <div *ngFor="let clip of clips" class="video-wrapper">
+
+      <iframe
+
+        [src]="clip | youtubeEmbed"
+
+        frameborder="0"
+
+        width="560"
+
+        height="315"
+
+        title="Sur fiando vivo"
+
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+
+        referrerpolicy="strict-origin-when-cross-origin"
+
+        allowfullscreen>
+
+      </iframe>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- Vivos -->
+
+  <div class="video-gallery" *ngIf="activeVideoTab === 'vivos'">
+
+    <div *ngFor="let vivo of vivos" class="video-wrapper">
+
+      <iframe
+
+        [src]="vivo | youtubeEmbed"
+
+        frameborder="0"
+
+        width="560"
+
+        height="315"
+
+        title="Sur fiando vivo"
+
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+
+        referrerpolicy="strict-origin-when-cross-origin"
+
+        allowfullscreen>
+
+      </iframe>
+
+    </div>
+
+  </div>
+
+</div>
+

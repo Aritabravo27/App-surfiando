@@ -1,0 +1,49 @@
+@use 'design-tokens' as *;
+
+html,
+body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-image: url('../public/bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: var(--dark-brown);
+  background-blend-mode: lighten;
+}
+
+html {
+  box-sizing: border-box;
+  -webkit-text-size-adjust: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+img,
+video,
+svg,
+canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+iframe {
+  max-width: 100%;
+}
+
+:where(a, p, h1, h2, h3, h4, h5, h6, li, figcaption) {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Panel /admin: layout shell + tema (global: la clase .admin-app vive en el :host del componente) */
+@import './app/admin/admin-global.scss';
+@import './app/admin/admin-ui.scss';

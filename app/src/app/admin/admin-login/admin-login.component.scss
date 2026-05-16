@@ -1,0 +1,28 @@
+:host {
+  display: block;
+}
+
+/* Tarjeta login: un poco más “premium” */
+:host .admin-shell .admin-card {
+  background: linear-gradient(165deg, #302820 0%, #252018 100%);
+  border-color: rgba(228, 179, 103, 0.2);
+  padding: 2rem 1.85rem;
+}
+
+.admin-brand-tag {
+  margin: -0.25rem 0 1rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mustard);
+  opacity: 0.9;
+}
+
+.admin-login-form {
+  margin-top: 1.35rem;
+}
+
+.admin-login-form input {
+  margin-bottom: 0.35rem;
+}

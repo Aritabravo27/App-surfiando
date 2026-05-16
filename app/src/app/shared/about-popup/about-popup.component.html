@@ -1,0 +1,21 @@
+<section class="about-popup" *ngIf="bio || team.length; else empty">
+  <div class="about-popup__intro" *ngIf="bio">
+    <p class="about-popup__bio-text">{{ bio }}</p>
+  </div>
+  <h2 class="about-popup__title" *ngIf="team.length">Equipo</h2>
+  <div class="about-popup__grid" *ngIf="team.length">
+    <a *ngFor="let m of team" [href]="m.linkUrl" target="_blank" rel="noopener noreferrer" class="about-popup__card">
+      <div class="about-popup__photo-wrap">
+        <img [src]="m.photoUrl" [alt]="m.name" />
+      </div>
+      <div class="about-popup__meta">
+        <strong>{{ m.name }}</strong>
+        <span class="about-popup__role">{{ m.role }}</span>
+        <p *ngIf="m.bio" class="about-popup__bio">{{ m.bio }}</p>
+      </div>
+    </a>
+  </div>
+</section>
+<ng-template #empty>
+  <p class="about-popup__empty">Todavía no hay texto ni equipo cargado en el panel.</p>
+</ng-template>

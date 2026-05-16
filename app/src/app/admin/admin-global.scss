@@ -1,0 +1,62 @@
+// Panel admin: capa oscura cálida sobre el fondo del sitio + ventana tipo “console” Surfiando.
+
+app-admin-login.admin-app,
+app-admin-panel.admin-app {
+  display: block;
+  min-height: 100vh;
+  padding: clamp(0.85rem, 2.5vw, 2rem);
+  box-sizing: border-box;
+  /* Oscurecemos sin borrar del todo la foto: coherente con el resto del sitio */
+  background: linear-gradient(
+    165deg,
+    rgba(12, 8, 6, 0.91) 0%,
+    rgba(43, 25, 18, 0.88) 42%,
+    rgba(18, 12, 9, 0.93) 100%
+  );
+  background-attachment: scroll;
+}
+
+.admin-app .admin-shell {
+  width: 100%;
+  max-width: min(72rem, 100%);
+  margin-left: auto;
+  margin-right: auto;
+  padding: clamp(1.65rem, 3.5vw, 2.75rem) clamp(1.35rem, 3.5vw, 2.35rem)
+    clamp(1.4rem, 3.5vw, 2.35rem);
+  background:
+    linear-gradient(165deg, rgba(40, 32, 26, 0.97) 0%, rgba(28, 22, 18, 0.99) 100%);
+  border: 1px solid rgba(228, 179, 103, 0.22);
+  border-radius: 1.1rem;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 6px 24px rgba(0, 0, 0, 0.35),
+    0 32px 64px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 248, 235, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: relative;
+}
+
+/* Barra de marca Surfiando */
+.admin-app .admin-shell::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 1.1rem 1.1rem 0 0;
+  background: linear-gradient(
+    90deg,
+    var(--terracotta, #a1432c) 0%,
+    var(--mustard, #e4b367) 50%,
+    var(--mud, #826144) 100%
+  );
+  opacity: 1;
+  pointer-events: none;
+}
+
+.admin-app .admin-shell > * {
+  position: relative;
+  z-index: 1;
+}

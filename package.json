@@ -1,0 +1,18 @@
+{
+  "name": "boiler-template",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev --prefix api\" \"npm start --prefix app\"",
+    "build": "npm run build --prefix app",
+    "start": "npm run start --prefix api",
+    "start:mono": "cross-env SERVE_STATIC=../app/dist/app/browser npm run start --prefix api",
+    "build:netlify": "npm ci --prefix api && npm ci --prefix app && npm run netlify-build --prefix app"
+  },
+  "dependencies": {
+    "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3"
+  }
+}

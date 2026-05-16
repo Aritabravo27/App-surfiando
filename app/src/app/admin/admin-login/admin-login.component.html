@@ -1,0 +1,30 @@
+<div class="admin-shell">
+  <div class="admin-card admin-narrow">
+    <h1>Panel Surfiando</h1>
+    <p class="admin-brand-tag">proyecto · gestión del sitio</p>
+    <p class="admin-lead">Solo para quienes administran el sitio. Acá no hay que saber de computadoras: entrá con la clave que te pasaron.</p>
+
+    <form (ngSubmit)="submit()" class="admin-login-form">
+      <label class="admin-label" for="admin-password">Clave de acceso</label>
+      <input
+        id="admin-password"
+        type="password"
+        name="password"
+        [(ngModel)]="password"
+        required
+        autocomplete="current-password"
+        placeholder="Escribí la clave acá"
+      />
+      <div class="admin-toolbar">
+        <button type="submit" class="btn btn--primary" [disabled]="loading || !password">
+          {{ loading ? 'Entrando…' : 'Entrar al panel' }}
+        </button>
+      </div>
+    </form>
+
+    <p class="alert alert--err" *ngIf="error" role="alert">{{ error }}</p>
+    <p class="admin-hint" style="margin-top: 1.25rem; margin-bottom: 0">
+      <a routerLink="/" class="admin-link">← Volver a la página principal</a>
+    </p>
+  </div>
+</div>

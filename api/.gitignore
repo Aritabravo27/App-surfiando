@@ -1,0 +1,6 @@
+node_modules/
+data/data.json
+data/*.tmp
+env.env
+.env
+*-firebase-adminsdk*.json

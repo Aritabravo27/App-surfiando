@@ -1,0 +1,59 @@
+<div *ngIf="!selectedAlbumId; else albumDetailTpl">
+  <div class="albums-grid" *ngIf="albums.length > 0">
+    <article class="album-card" *ngFor="let album of albums; trackBy: trackByAlbum">
+      <button
+        type="button"
+        class="album-cover"
+        (click)="openAlbum(album.id)">
+        <img [src]="album.cover" [alt]="album.title" loading="lazy" />
+        <div class="album-meta">
+          <h3>{{ album.title }}</h3>
+          <span>{{ album.videos.length }} video(s)</span>
+        </div>
+      </button>
+    </article>
+  </div>
+  <p class="audio-empty" *ngIf="albums.length === 0">
+    No hay álbumes cargados. Configuralos en el panel de administración.
+  </p>
+</div>
+
+<ng-template #albumDetailTpl>
+  <section class="album-detail" *ngIf="selectedAlbum as album">
+    <div class="detail-header">
+      <button type="button" class="back-btn" (click)="closeAlbum()">← Volver</button>
+      <div class="head-meta">
+        <img class="cover" [src]="album.cover" [alt]="album.title" />
+        <div>
+          <h2>{{ album.title }}</h2>
+          <p>{{ album.videos.length }} video(s)</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="video-grid three-per-row">
+      <ng-container *ngFor="let v of album.videos; trackBy: trackByVideo">
+        <div class="video-item" *ngIf="!playing.has(v.id); else embedTpl" (click)="playVideo(v.id)">
+          <img class="thumb" [src]="thumbUrl(v.id)" [alt]="v.title || 'Video'" loading="lazy" />
+          <div class="play-overlay" aria-hidden="true">▶</div>
+          <div class="video-title">{{ v.title || 'Video' }}</div>
+        </div>
+
+        <ng-template #embedTpl>
+          <div class="video-item">
+            <iframe
+              [src]="watchUrl(v.id) | youtubeEmbed:'rel=0&modestbranding=1&autoplay=1&playsinline=1'"
+              [title]="v.title || 'YouTube player'"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen
+              loading="lazy">
+            </iframe>
+            <div class="video-title">{{ v.title || 'Video' }}</div>
+          </div>
+        </ng-template>
+      </ng-container>
+    </div>
+  </section>
+</ng-template>
