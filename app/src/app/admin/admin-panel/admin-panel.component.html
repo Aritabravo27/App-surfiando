@@ -222,7 +222,7 @@
     <div *ngIf="adminTab === 'events'" role="tabpanel">
       <section class="admin-card admin-card--step">
         <h2>Eventos</h2>
-        <p class="admin-card__intro">Nombre, fecha, lugar y enlace del botón (obligatorio, con https://).</p>
+        <p class="admin-card__intro">Nombre, fecha, hora (opcional), lugar y enlace del botón (obligatorio, con https://).</p>
         <button type="button" class="btn btn--secondary" (click)="addEventRow()">Agregar evento</button>
         <div class="admin-entity-list" *ngFor="let ev of eventRows; let i = index">
           <div class="admin-entity-card">
@@ -231,6 +231,9 @@
             <input type="text" [(ngModel)]="ev.name" [name]="'ev-name-' + i" />
             <label class="admin-label admin-label--small">Fecha</label>
             <input type="date" [(ngModel)]="ev.date" [name]="'ev-date-' + i" />
+            <label class="admin-label admin-label--small">Hora</label>
+            <input type="time" [(ngModel)]="ev.time" [name]="'ev-time-' + i" />
+            <p class="admin-hint">Opcional. Formato 24 h.</p>
             <label class="admin-label admin-label--small">Lugar</label>
             <input type="text" [(ngModel)]="ev.location" [name]="'ev-loc-' + i" />
             <label class="admin-label admin-label--small">Enlace (CTA) (obligatorio)</label>
@@ -282,7 +285,10 @@
       </section>
       <section class="admin-card admin-card--step">
         <h2>Equipo</h2>
-        <p class="admin-card__intro">Foto, nombre, rol, bio opcional, enlace al tocar la foto.</p>
+        <p class="admin-card__intro">
+          Foto, nombre, rol, bio opcional y enlace al tocar la foto. La foto y el enlace deben ser URLs con
+          <strong>https://</strong> (si escribís solo el dominio, se agrega https:// al guardar, igual que en eventos).
+        </p>
         <button type="button" class="btn btn--secondary" (click)="addTeamRow()">Agregar persona</button>
         <div class="admin-entity-list" *ngFor="let t of teamRows; let i = index">
           <div class="admin-entity-card">

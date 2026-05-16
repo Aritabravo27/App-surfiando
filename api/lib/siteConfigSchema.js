@@ -33,21 +33,45 @@ function normalizeGalleryImageArray(arr) {
     .filter(Boolean);
 }
 
+function normalizeEventTime(raw) {
+  const s = String(raw ?? '').trim();
+  const m = /^(\d{1,2}):(\d{2})$/.exec(s);
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
+function normalizeEventDate(raw) {
+  const s = String(raw ?? '').trim().slice(0, 50);
+  const m = /^(\d{4}-\d{2}-\d{2})/.exec(s);
+  return m ? m[1] : s;
+}
+
 function normalizeEventsArray(arr) {
   return (Array.isArray(arr) ? arr : [])
     .map((item, i) => {
       if (!item || typeof item !== 'object') return null;
       const name = typeof item.name === 'string' ? item.name.trim().slice(0, 200) : '';
-      const date = typeof item.date === 'string' ? item.date.trim().slice(0, 50) : '';
+      const dateRaw = typeof item.date === 'string' ? item.date : '';
+      const date = normalizeEventDate(dateRaw);
       const location =
         typeof item.location === 'string' ? item.location.trim().slice(0, 300) : '';
       const ctaUrl = normalizeHttpUrl(
         typeof item.ctaUrl === 'string' ? item.ctaUrl : ''
       );
       if (!name || !date || !location || !isHttpUrl(ctaUrl)) return null;
+      let time = normalizeEventTime(item.time);
+      if (!time) {
+        const isoTime = /T(\d{1,2}):(\d{2})/.exec(String(dateRaw).trim());
+        if (isoTime) time = normalizeEventTime(`${isoTime[1]}:${isoTime[2]}`);
+      }
       const order =
         typeof item.order === 'number' && Number.isFinite(item.order) ? item.order : i;
-      return { name, date, location, ctaUrl, order };
+      const out = { name, date, location, ctaUrl, order };
+      if (time) out.time = time;
+      return out;
     })
     .filter(Boolean);
 }

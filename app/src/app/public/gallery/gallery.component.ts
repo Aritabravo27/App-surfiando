@@ -64,7 +64,7 @@ export class GalleryComponent implements OnInit, OnDestroy {
     { id: 'cambalache', label: 'Cambalache' },
   ];
 
-  isLoading = false;
+  isLoading = true;
   images: { url: string }[] = [];
   urls: string[] = [];
   /** Carrusel lightbox */

@@ -3,15 +3,17 @@ import { Component, OnInit } from '@angular/core';
 import { take } from 'rxjs';
 import type { SiteTeamMemberConfig } from '../../models/site-config';
 import { ConfigService } from '../../services/config.service';
+import { SpinnerComponent } from '../spinner/spinner.component';
 
 @Component({
   selector: 'app-about-popup',
   standalone: true,
-  imports: [CommonModule, NgFor, NgIf],
+  imports: [CommonModule, NgFor, NgIf, SpinnerComponent],
   templateUrl: './about-popup.component.html',
   styleUrl: './about-popup.component.scss',
 })
 export class AboutPopupComponent implements OnInit {
+  loading = true;
   team: SiteTeamMemberConfig[] = [];
   bio = '';
 
@@ -21,9 +23,15 @@ export class AboutPopupComponent implements OnInit {
     this.configService
       .getConfig()
       .pipe(take(1))
-      .subscribe((c) => {
-        this.team = c.about?.team ?? [];
-        this.bio = c.about?.bio ?? '';
+      .subscribe({
+        next: (c) => {
+          this.team = c.about?.team ?? [];
+          this.bio = c.about?.bio ?? '';
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        },
       });
   }
 }

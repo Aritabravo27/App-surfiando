@@ -104,6 +104,12 @@ export class AdminPanelComponent implements OnInit {
       return;
     }
 
+    const teamError = this.validateTeamRowsBeforeSave();
+    if (teamError) {
+      this.error = teamError;
+      return;
+    }
+
     this.saving = true;
     const clips = this.linesToVideos(this.clipsText);
     const vivos = this.linesToVideos(this.vivosText);
@@ -120,16 +126,7 @@ export class AdminPanelComponent implements OnInit {
         linkUrl: m.linkUrl.trim(),
         order: i,
       }));
-    const team = this.teamRows
-      .filter((t) => t.name.trim() && t.role.trim() && t.photoUrl.trim() && t.linkUrl.trim())
-      .map((t, i) => ({
-        name: t.name.trim(),
-        role: t.role.trim(),
-        bio: t.bio?.trim() || undefined,
-        photoUrl: t.photoUrl.trim(),
-        linkUrl: t.linkUrl.trim(),
-        order: i,
-      }));
+    const team = this.buildTeamFromRows();
     const musicAlbums: SiteMusicAlbumConfig[] = this.albumRows
       .filter(
         (row) =>
@@ -196,7 +193,7 @@ export class AdminPanelComponent implements OnInit {
   }
 
   addEventRow(): void {
-    this.eventRows.push({ name: '', date: '', location: '', ctaUrl: '' });
+    this.eventRows.push({ name: '', date: '', time: '', location: '', ctaUrl: '' });
   }
 
   removeEventRow(i: number): void {
@@ -484,15 +481,7 @@ export class AdminPanelComponent implements OnInit {
     this.socialBandcamp = c.social?.bandcamp ?? '';
     this.socialEmail = (c.social?.email ?? '').replace(/^mailto:/i, '');
     this.socialPhone = c.social?.phone ?? '';
-    this.eventRows = (c.events ?? []).map((e) => ({
-      name: e.name,
-      date:
-        e.date && e.date.length >= 10 && /^\d{4}-\d{2}-\d{2}/.test(e.date)
-          ? e.date.slice(0, 10)
-          : e.date,
-      location: e.location,
-      ctaUrl: e.ctaUrl,
-    }));
+    this.eventRows = (c.events ?? []).map((e) => this.eventConfigToRow(e));
     this.merchRows = (c.merch ?? []).map((m) => ({
       name: m.name,
       photoUrl: m.photoUrl,
@@ -516,8 +505,46 @@ export class AdminPanelComponent implements OnInit {
     }));
   }
 
+  private eventConfigToRow(e: SiteEventConfig): SiteEventConfig {
+    const dateRaw = e.date ?? '';
+    let date =
+      dateRaw.length >= 10 && /^\d{4}-\d{2}-\d{2}/.test(dateRaw)
+        ? dateRaw.slice(0, 10)
+        : dateRaw;
+    let time = e.time?.trim() ?? '';
+    if (!time) {
+      const isoTime = /T(\d{1,2}):(\d{2})/.exec(dateRaw.trim());
+      if (isoTime) {
+        time = `${isoTime[1].padStart(2, '0')}:${isoTime[2]}`;
+      }
+    }
+    return {
+      name: e.name,
+      date,
+      time,
+      location: e.location,
+      ctaUrl: e.ctaUrl,
+    };
+  }
+
+  private normalizeEventTimeForSave(raw: string | undefined): string | undefined {
+    const s = String(raw ?? '').trim();
+    const m = /^(\d{1,2}):(\d{2})$/.exec(s);
+    if (!m) return undefined;
+    const h = Number(m[1]);
+    const min = Number(m[2]);
+    if (h < 0 || h > 23 || min < 0 || min > 59) return undefined;
+    return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  }
+
   private isEventRowEmpty(e: SiteEventConfig): boolean {
-    return !e.name.trim() && !e.date.trim() && !e.location.trim() && !e.ctaUrl.trim();
+    return (
+      !e.name.trim() &&
+      !e.date.trim() &&
+      !(e.time?.trim() ?? '') &&
+      !e.location.trim() &&
+      !e.ctaUrl.trim()
+    );
   }
 
   private isEventRowComplete(e: SiteEventConfig): boolean {
@@ -560,11 +587,80 @@ export class AdminPanelComponent implements OnInit {
       ) {
         continue;
       }
-      out.push({
+      const row: SiteEventConfig = {
         name: e.name.trim(),
         date: e.date.trim(),
         location: e.location.trim(),
         ctaUrl,
+        order: out.length,
+      };
+      const time = this.normalizeEventTimeForSave(e.time);
+      if (time) row.time = time;
+      out.push(row);
+    }
+    return out;
+  }
+
+  private isTeamRowEmpty(t: SiteTeamMemberConfig): boolean {
+    return (
+      !t.name.trim() &&
+      !t.role.trim() &&
+      !(t.bio?.trim() ?? '') &&
+      !t.photoUrl.trim() &&
+      !t.linkUrl.trim()
+    );
+  }
+
+  private isTeamRowComplete(t: SiteTeamMemberConfig): boolean {
+    const photoUrl = this.normalizeHttpUrl(t.photoUrl);
+    const linkUrl = this.normalizeHttpUrl(t.linkUrl);
+    return !!(
+      t.name.trim() &&
+      t.role.trim() &&
+      photoUrl &&
+      linkUrl &&
+      this.isHttpUrl(photoUrl) &&
+      this.isHttpUrl(linkUrl)
+    );
+  }
+
+  private validateTeamRowsBeforeSave(): string | null {
+    const invalid: string[] = [];
+    this.teamRows.forEach((t, i) => {
+      if (this.isTeamRowEmpty(t)) return;
+      if (!this.isTeamRowComplete(t)) {
+        invalid.push(t.name.trim() || `Persona ${i + 1}`);
+      }
+    });
+    if (invalid.length === 0) return null;
+    return (
+      `Hay miembros del equipo incompletos (${invalid.join(', ')}): cada uno necesita nombre, rol, ` +
+      'foto y enlace con https:// (ej. https://instagram.com/tu-cuenta).'
+    );
+  }
+
+  private buildTeamFromRows(): SiteTeamMemberConfig[] {
+    const out: SiteTeamMemberConfig[] = [];
+    for (const t of this.teamRows) {
+      if (this.isTeamRowEmpty(t)) continue;
+      const photoUrl = this.normalizeHttpUrl(t.photoUrl);
+      const linkUrl = this.normalizeHttpUrl(t.linkUrl);
+      if (
+        !t.name.trim() ||
+        !t.role.trim() ||
+        !photoUrl ||
+        !linkUrl ||
+        !this.isHttpUrl(photoUrl) ||
+        !this.isHttpUrl(linkUrl)
+      ) {
+        continue;
+      }
+      out.push({
+        name: t.name.trim(),
+        role: t.role.trim(),
+        bio: t.bio?.trim() || undefined,
+        photoUrl,
+        linkUrl,
         order: out.length,
       });
     }

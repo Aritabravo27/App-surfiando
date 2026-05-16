@@ -4,6 +4,7 @@ import { NgFor, NgIf } from '@angular/common';
 import { take } from 'rxjs';
 import type { SiteConfig } from '../../../models/site-config';
 import { ConfigService } from '../../../services/config.service';
+import { SpinnerComponent } from '../../../shared/spinner/spinner.component';
 
 type Video = {
   id: string;
@@ -30,7 +31,7 @@ function mapConfigToAlbums(c: SiteConfig): Album[] {
 @Component({
   selector: 'app-audio',
   standalone: true,
-  imports: [YoutubeEmbedPipe, NgIf, NgFor],
+  imports: [YoutubeEmbedPipe, NgIf, NgFor, SpinnerComponent],
   templateUrl: './audio.component.html',
   styleUrl: './audio.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +40,7 @@ export class AudioComponent implements OnInit {
   private readonly configService = inject(ConfigService);
   private readonly cdr = inject(ChangeDetectorRef);
 
+  loading = true;
   albums: Album[] = [];
   selectedAlbumId: string | null = null;
   playing = new Set<string>();
@@ -54,10 +56,12 @@ export class AudioComponent implements OnInit {
       .subscribe({
         next: (c) => {
           this.albums = mapConfigToAlbums(c);
+          this.loading = false;
           this.cdr.markForCheck();
         },
         error: () => {
           this.albums = [];
+          this.loading = false;
           this.cdr.markForCheck();
         },
       });

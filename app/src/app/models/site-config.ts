@@ -20,6 +20,7 @@ export interface SiteConfigGallery {
 export interface SiteEventConfig {
   name: string;
   date: string;
+  time?: string;
   location: string;
   ctaUrl: string;
   order?: number;

@@ -1,17 +1,21 @@
-<section class="merch-popup" *ngIf="items.length > 0; else empty">
-  <h2 class="merch-popup__title">Merch</h2>
-  <div class="merch-popup__grid">
-    <a
-      *ngFor="let m of items"
-      class="merch-popup__item"
-      [href]="m.linkUrl"
-      target="_blank"
-      rel="noopener noreferrer">
-      <div class="merch-popup__photo" [style.background-image]="'url(' + m.photoUrl + ')'"></div>
-      <span class="merch-popup__cta">{{ m.name }}</span>
-    </a>
-  </div>
-</section>
-<ng-template #empty>
-  <p class="merch-popup__empty">No hay productos cargados. Configuralos en el panel de administración.</p>
-</ng-template>
+<app-spinner *ngIf="loading" [overlay]="true" [size]="84"></app-spinner>
+
+<ng-container *ngIf="!loading">
+  <section class="merch-popup" *ngIf="items.length > 0; else empty">
+    <h2 class="merch-popup__title">Merch</h2>
+    <div class="merch-popup__grid">
+      <a
+        *ngFor="let m of items"
+        class="merch-popup__item"
+        [href]="m.linkUrl"
+        target="_blank"
+        rel="noopener noreferrer">
+        <div class="merch-popup__photo" [style.background-image]="'url(' + m.photoUrl + ')'"></div>
+        <span class="merch-popup__cta">{{ m.name }}</span>
+      </a>
+    </div>
+  </section>
+  <ng-template #empty>
+    <p class="merch-popup__empty">No hay productos cargados. Configuralos en el panel de administración.</p>
+  </ng-template>
+</ng-container>
