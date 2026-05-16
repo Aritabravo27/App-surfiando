@@ -40,3 +40,21 @@
   text-align: center;
   color: var(--admin-text-muted);
 }
+
+@media (max-width: 640px) {
+  .admin-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-top-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .admin-top-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

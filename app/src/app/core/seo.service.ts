@@ -18,7 +18,7 @@ export class SeoService {
       mergeMap(r => r.data)
     ).subscribe(d => {
       const t = d['title'] || 'Surfiando';
-      const desc = d['description'] || 'surfiando, sur fiando, proyecto sur fiando, proyecto surfiando, sur.fiando, valentin alsina, eventos, evento, banda, proyecto, musica';
+      const desc = d['description'] || 'Surf, música y agenda de eventos.';
       const url = this.document.location?.href || '';
       this.title.setTitle(t);
       this.meta.updateTag({ name: 'description', content: desc });

@@ -60,3 +60,15 @@ app-admin-panel.admin-app {
   position: relative;
   z-index: 1;
 }
+
+@media (max-width: 480px) {
+  app-admin-login.admin-app,
+  app-admin-panel.admin-app {
+    padding: 0.65rem;
+  }
+
+  .admin-app .admin-shell {
+    padding: 1.15rem 0.85rem 1.2rem;
+    border-radius: 0.85rem;
+  }
+}
