@@ -76,15 +76,13 @@
 
         [attr.aria-label]="'Ampliar imagen ' + (i + 1) + ' de ' + images.length"
 
-        [ngStyle]="img.style"
-
-        [style.background-image]="'url(' + img.url + ')'"
-
         title="Surfiando — clic para ampliar"
 
         (click)="openModal(i)"
 
         (keydown)="onItemKeydown($event, i)">
+
+        <img [src]="img.url" loading="lazy" [alt]="'Foto ' + (i + 1) + ' — Surfiando'" />
 
       </div>
 
@@ -96,74 +94,51 @@
 
 
 
-<!-- Lightbox carrusel -->
-
+<!-- Lightbox: se teleporta a document.body al abrir -->
 <div
-
+  #lightboxRoot
   *ngIf="isModalOpen && activeModalUrl"
-
   class="gallery-lightbox"
-
-  role="presentation"
-
+  role="dialog"
+  aria-modal="true"
+  aria-label="Galería de imágenes ampliadas"
+  tabindex="-1"
   (click)="onOverlayClick($event)">
-
-  <div
-
-    #lightboxDialog
-
-    class="gallery-lightbox__dialog"
-
-    role="dialog"
-
-    aria-modal="true"
-
-    aria-label="Galería de imágenes ampliadas"
-
-    tabindex="-1"
-
-    (click)="$event.stopPropagation()">
-
-    <button type="button" class="gallery-lightbox__close" aria-label="Cerrar galería" (click)="closeModal()">
-
-      ×
-
-    </button>
-
-    <p class="gallery-lightbox__counter" aria-live="polite">{{ modalPositionLabel }}</p>
-
-    <button type="button" class="gallery-lightbox__nav gallery-lightbox__nav--prev" aria-label="Imagen anterior" (click)="prev()">
-
-      ‹
-
-    </button>
-
-    <button type="button" class="gallery-lightbox__nav gallery-lightbox__nav--next" aria-label="Imagen siguiente" (click)="next()">
-
-      ›
-
-    </button>
-
-    <div
-
-      #lightboxStage
-
-      class="gallery-lightbox__stage"
-
-      touch-action="pan-y"
-
-      (pointerdown)="onStagePointerDown($event)"
-
-      (pointerup)="onStagePointerUp($event)"
-
-      (pointercancel)="onStagePointerCancel($event)">
-
-      <img [src]="activeModalUrl" alt="Foto ampliada — Surfiando" />
-
-    </div>
-
-  </div>
-
+  <button
+    type="button"
+    class="gallery-lightbox__close"
+    aria-label="Cerrar galería"
+    (click)="closeModal(); $event.stopPropagation()">
+    ×
+  </button>
+  <p class="gallery-lightbox__counter" aria-live="polite">{{ modalPositionLabel }}</p>
+  <button
+    type="button"
+    class="gallery-lightbox__nav gallery-lightbox__nav--prev"
+    aria-label="Imagen anterior"
+    (click)="prev(); $event.stopPropagation()">
+    ‹
+  </button>
+  <button
+    type="button"
+    class="gallery-lightbox__nav gallery-lightbox__nav--next"
+    aria-label="Imagen siguiente"
+    (click)="next(); $event.stopPropagation()">
+    ›
+  </button>
+  <img
+    #modalImg
+    class="gallery-lightbox__photo"
+    [src]="activeModalUrl"
+    alt="Foto ampliada — Surfiando"
+    [class.is-ready]="modalImgWidth != null"
+    [style.width.px]="modalImgWidth"
+    [style.height.px]="modalImgHeight"
+    (load)="onModalImageLoad($event)"
+    (click)="$event.stopPropagation()"
+    (pointerdown)="onPhotoPointerDown($event)"
+    (pointerup)="onPhotoPointerUp($event)"
+    (pointercancel)="onPhotoPointerCancel($event)" />
 </div>
 
 
@@ -243,4 +218,3 @@
   </div>
 
 </div>
-

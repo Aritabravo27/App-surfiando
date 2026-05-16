@@ -1,12 +1,15 @@
-import { isPlatformBrowser, NgFor, NgIf, NgStyle } from '@angular/common';
+import { isPlatformBrowser, NgFor, NgIf } from '@angular/common';
 import {
+  afterNextRender,
   Component,
   ElementRef,
   HostListener,
   Inject,
+  Injector,
   OnDestroy,
   OnInit,
   PLATFORM_ID,
+  Renderer2,
   ViewChild,
 } from '@angular/core';
 import { catchError, forkJoin, of } from 'rxjs';
@@ -36,17 +39,22 @@ const DEFAULT_VIVOS: string[] = [
 @Component({
   selector: 'app-gallery',
   standalone: true,
-  imports: [NgStyle, NgFor, NgIf, YoutubeEmbedPipe, SpinnerComponent],
+  imports: [NgFor, NgIf, YoutubeEmbedPipe, SpinnerComponent],
   templateUrl: './gallery.component.html',
   styleUrl: './gallery.component.scss',
 })
 export class GalleryComponent implements OnInit, OnDestroy {
-  @ViewChild('lightboxDialog') private lightboxDialog?: ElementRef<HTMLElement>;
-  @ViewChild('lightboxStage') private lightboxStage?: ElementRef<HTMLElement>;
+  @ViewChild('lightboxRoot') private lightboxRoot?: ElementRef<HTMLElement>;
+  @ViewChild('modalImg') private modalImg?: ElementRef<HTMLImageElement>;
+
+  modalImgWidth: number | null = null;
+  modalImgHeight: number | null = null;
 
   constructor(
     private readonly galleryService: GalleryService,
     private readonly configService: ConfigService,
+    private readonly renderer: Renderer2,
+    private readonly injector: Injector,
     @Inject(PLATFORM_ID) private readonly platformId: object
   ) {}
 
@@ -57,7 +65,7 @@ export class GalleryComponent implements OnInit, OnDestroy {
   ];
 
   isLoading = false;
-  images: { url: string; style: { 'grid-column': string; 'grid-row': string } }[] = [];
+  images: { url: string }[] = [];
   urls: string[] = [];
   /** Carrusel lightbox */
   isModalOpen = false;
@@ -94,6 +102,7 @@ export class GalleryComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.detachLightboxFromAnchor();
     this.unlockBodyScroll();
   }
 
@@ -182,17 +191,7 @@ export class GalleryComponent implements OnInit, OnDestroy {
 
   private setImagesFromUrls(urls: string[]): void {
     this.urls = urls;
-    this.images = urls.map((url: string) => {
-      const rowSpan = Math.random() > 0.7 ? 2 : 1;
-      const colSpan = Math.random() > 0.7 ? 2 : 1;
-      return {
-        url,
-        style: {
-          'grid-column': `span ${colSpan}`,
-          'grid-row': `span ${rowSpan}`,
-        },
-      };
-    });
+    this.images = urls.map((url) => ({ url }));
     if (this.isModalOpen) {
       if (!urls.length) {
         this.closeModal();
@@ -215,17 +214,25 @@ export class GalleryComponent implements OnInit, OnDestroy {
   openModal(index: number): void {
     if (!this.urls.length) return;
     this.modalIndex = Math.max(0, Math.min(index, this.urls.length - 1));
+    this.resetModalImageSize();
     this.isModalOpen = true;
     this.lockBodyScroll();
     this.prefetchNeighbors();
-    queueMicrotask(() => {
-      this.lightboxDialog?.nativeElement?.focus();
-    });
+    afterNextRender(
+      () => {
+        this.attachLightboxToBody();
+        this.lightboxRoot?.nativeElement?.focus();
+        this.trySizeModalImageFromDom();
+      },
+      { injector: this.injector }
+    );
   }
 
   closeModal(): void {
     if (!this.isModalOpen) return;
+    this.detachLightboxFromAnchor();
     this.isModalOpen = false;
+    this.resetModalImageSize();
     this.swipePointerId = null;
     this.swipeCaptured = false;
     this.unlockBodyScroll();
@@ -234,13 +241,44 @@ export class GalleryComponent implements OnInit, OnDestroy {
   next(): void {
     if (!this.urls.length) return;
     this.modalIndex = (this.modalIndex + 1) % this.urls.length;
+    this.resetModalImageSize();
     this.prefetchNeighbors();
+    this.scheduleModalImageSize();
   }
 
   prev(): void {
     if (!this.urls.length) return;
     this.modalIndex = (this.modalIndex - 1 + this.urls.length) % this.urls.length;
+    this.resetModalImageSize();
     this.prefetchNeighbors();
+    this.scheduleModalImageSize();
+  }
+
+  onModalImageLoad(event: Event): void {
+    this.sizeModalImage(event.target as HTMLImageElement);
+  }
+
+  private sizeModalImage(img: HTMLImageElement): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const nw = img.naturalWidth;
+    const nh = img.naturalHeight;
+    if (!nw || !nh) return;
+
+    const pad = 32;
+    const maxW = window.innerWidth - pad;
+    const maxH = window.innerHeight - pad;
+    const scale = Math.min(1, maxW / nw, maxH / nh);
+    this.modalImgWidth = Math.round(nw * scale);
+    this.modalImgHeight = Math.round(nh * scale);
+  }
+
+  private scheduleModalImageSize(): void {
+    afterNextRender(() => this.trySizeModalImageFromDom(), { injector: this.injector });
+  }
+
+  private trySizeModalImageFromDom(): void {
+    const img = this.modalImg?.nativeElement;
+    if (img?.complete) this.sizeModalImage(img);
   }
 
   onOverlayClick(event: MouseEvent): void {
@@ -249,12 +287,12 @@ export class GalleryComponent implements OnInit, OnDestroy {
     }
   }
 
-  onStagePointerDown(event: PointerEvent): void {
+  onPhotoPointerDown(event: PointerEvent): void {
     if (!this.isModalOpen) return;
     this.swipeStartX = event.clientX;
     this.swipePointerId = event.pointerId;
     this.swipeCaptured = false;
-    const el = this.lightboxStage?.nativeElement;
+    const el = this.modalImg?.nativeElement;
     if (el) {
       try {
         el.setPointerCapture(event.pointerId);
@@ -265,12 +303,12 @@ export class GalleryComponent implements OnInit, OnDestroy {
     }
   }
 
-  onStagePointerUp(event: PointerEvent): void {
+  onPhotoPointerUp(event: PointerEvent): void {
     if (!this.isModalOpen || event.pointerId !== this.swipePointerId) return;
     const dx = event.clientX - this.swipeStartX;
-    if (this.swipeCaptured && this.lightboxStage?.nativeElement) {
+    if (this.swipeCaptured && this.modalImg?.nativeElement) {
       try {
-        this.lightboxStage.nativeElement.releasePointerCapture(event.pointerId);
+        this.modalImg.nativeElement.releasePointerCapture(event.pointerId);
       } catch {
         /* ignore */
       }
@@ -283,8 +321,8 @@ export class GalleryComponent implements OnInit, OnDestroy {
     }
   }
 
-  onStagePointerCancel(event: PointerEvent): void {
-    this.onStagePointerUp(event);
+  onPhotoPointerCancel(event: PointerEvent): void {
+    this.onPhotoPointerUp(event);
   }
 
   onItemKeydown(event: KeyboardEvent, index: number): void {
@@ -318,5 +356,29 @@ export class GalleryComponent implements OnInit, OnDestroy {
     if (!isPlatformBrowser(this.platformId) || !this.scrollLocked) return;
     document.body.style.overflow = '';
     this.scrollLocked = false;
+  }
+
+  private resetModalImageSize(): void {
+    this.modalImgWidth = null;
+    this.modalImgHeight = null;
+  }
+
+  private lightboxAnchor: HTMLElement | null = null;
+
+  private attachLightboxToBody(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const el = this.lightboxRoot?.nativeElement;
+    if (!el || el.parentElement === document.body) return;
+    this.lightboxAnchor = el.parentElement;
+    this.renderer.appendChild(document.body, el);
+  }
+
+  private detachLightboxFromAnchor(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const el = this.lightboxRoot?.nativeElement;
+    const anchor = this.lightboxAnchor;
+    if (!el || !anchor || el.parentElement === anchor) return;
+    this.renderer.appendChild(anchor, el);
+    this.lightboxAnchor = null;
   }
 }

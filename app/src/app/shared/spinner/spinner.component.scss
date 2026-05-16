@@ -4,7 +4,12 @@
 
   img {
     display: block;
+    border-radius: 50%;
+    object-fit: cover;
     animation: spin var(--dur, 1s) linear infinite;
+    box-shadow:
+      0 0 0 2px rgba(228, 179, 103, 0.35),
+      0 4px 16px rgba(0, 0, 0, 0.35);
   }
 
   &.slow   { --dur: 1.5s; }
